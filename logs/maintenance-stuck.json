@@ -1,0 +1,45 @@
+{
+  "incident": "maintenance-stuck",
+  "symptom": "Every page returns HTTP 503: \"Briefly unavailable for scheduled maintenance. Check back in a minute.\"",
+  "root_cause": "An update that never finished: WordPress's .maintenance file was left in the web root (every page HTTP 503), and contact-form-7 6.2.1 fails its wordpress.org checksums on 2 files (includes/mail.php, includes/submission.php); with .maintenance removed, home returned HTTP 500: PHP Parse error:  syntax error, unexpected string content \"Failed to attach a file. The t...\" in wp-content/plugins/contact-form-7/includes/mail.php on line 316.",
+  "steps": [
+    {
+      "t": 0.1,
+      "step": "probe",
+      "evidence": "GET / → HTTP 503, \"Briefly unavailable for scheduled maintenance. Check back in a minute.\""
+    },
+    {
+      "t": 0.4,
+      "step": "find .maintenance",
+      "evidence": "web root has .maintenance from an update started 2 s ago ($upgrading = 1791513685); WordPress writes it before an update and deletes it after"
+    },
+    {
+      "t": 0.6,
+      "step": "remove .maintenance",
+      "evidence": "rm .maintenance → home HTTP 500 — the update it belonged to never finished"
+    },
+    {
+      "t": 0.8,
+      "step": "read debug.log",
+      "evidence": "PHP Parse error: syntax error, unexpected string content \"Failed to attach a file. The t...\" in /var/www/html/wp-content/plugins/contact-form-7/includes/mail.php on line 316"
+    },
+    {
+      "t": 6.5,
+      "step": "verify checksums",
+      "evidence": "wp plugin verify-checksums --all → contact-form-7 6.2.1: includes/mail.php (checksum does not match), includes/submission.php (checksum does not match); every other wordpress.org plugin matches"
+    },
+    {
+      "t": 12.3,
+      "step": "reinstall",
+      "evidence": "wp plugin install contact-form-7 --version=6.2.1 --force → active 6.2.1"
+    }
+  ],
+  "fixed_in_s": 17.5,
+  "verified": [
+    "home HTTP 200 with every section and the booking form",
+    "wp-login.php HTTP 200",
+    "no .maintenance in the web root",
+    "every wordpress.org plugin matches its checksums"
+  ],
+  "finished_at": "2026-10-09T02:41:44.987Z"
+}

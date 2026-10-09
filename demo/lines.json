@@ -1,0 +1,14 @@
+[
+ {"id": "1-hook", "text": "When a clinic's website goes down, no patient can book. Here's how I bring a broken WordPress site back."},
+ {"id": "2-white", "text": "Bayview Dental, a demo site, right after a staged plugin update. A critical error on every page."},
+ {"id": "3-rescue1", "text": "My rescue script reads the debug log, finds the plugin that crashed, rolls it back, and checks the booking form."},
+ {"id": "4-back", "text": "The site is back, and patients can book again."},
+ {"id": "5-maint", "text": "Next, an update that died half-way. The site is stuck in maintenance mode."},
+ {"id": "6-rescue2", "text": "Checksums find the half-written plugin files, and the script reinstalls that exact version."},
+ {"id": "7-hacked", "text": "Third, a hacked site, staged as a safe simulation. There's an administrator nobody created."},
+ {"id": "7b-spam", "text": "And spam links injected into the pages and the footer."},
+ {"id": "8-rescue3", "text": "The script quarantines the backdoor, deletes the rogue admin, strips the spam from the database, resets passwords, and blocks PHP in uploads."},
+ {"id": "9-clean", "text": "Clean again."},
+ {"id": "10-log", "text": "Every rescue writes a timed log: the symptom, the root cause, each step, and what was checked."},
+ {"id": "11-end", "text": "Built by McKeen Asma, WordPress and Tech V A."}
+]

@@ -1,0 +1,66 @@
+# Bayview Dental — a healthy WordPress site that break.sh breaks and rescue.sh fixes.
+# docker compose -p va-p5 up -d   →  http://localhost:8092  (admin/admin, local only)
+x-db-env: &dbenv
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_USER: wp
+  WORDPRESS_DB_PASSWORD: wp
+  WORDPRESS_DB_NAME: wordpress
+  # Errors go to wp-content/debug.log, never to the visitor's screen — where a rescue starts.
+  WORDPRESS_DEBUG: "1"
+  WORDPRESS_CONFIG_EXTRA: |
+    define('WP_DEBUG_LOG', true);
+    define('WP_DEBUG_DISPLAY', false);
+    @ini_set('display_errors', '0');
+
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wp
+      MARIADB_PASSWORD: wp
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  wp:
+    image: wordpress:php8.3-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8092:80"
+    environment: *dbenv
+    # The image caches PHP files for 2 s (opcache.revalidate_freq=2); a file swapped inside that window would be
+    # served stale, so a break or a fix could look like it did nothing. Re-check files on every request instead.
+    command: ["bash", "-c", "echo opcache.revalidate_freq=0 > /usr/local/etc/php/conf.d/zz-va-p5.ini && exec docker-entrypoint.sh apache2-foreground"]
+    volumes:
+      - wp:/var/www/html
+
+  # Long-running WP-CLI box, so every `./wp` call is a quick `exec`, not a new container.
+  cli:
+    image: wordpress:cli-php8.3
+    user: "33:33"
+    command: ["sleep", "infinity"]
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *dbenv
+      WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
+    volumes:
+      - wp:/var/www/html
+      - ./assets/photos:/photos:ro
+      - ./php:/php:ro
+      - ./snapshot:/snap
+      - ./quarantine:/quarantine
+
+volumes:
+  db:
+  wp:

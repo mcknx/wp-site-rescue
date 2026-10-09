@@ -1,0 +1,9 @@
+# rebuilt by assets/fetch-photos.sh / seed.sh / rescue.sh — keep the public repo small
+assets/photos/
+assets/originals/
+snapshot/
+shots/
+quarantine/
+node_modules/
+*.wav
+.env

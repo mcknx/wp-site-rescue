@@ -1,0 +1,45 @@
+{
+  "incident": "white-screen",
+  "symptom": "Home page returns HTTP 500: \"There has been a critical error on this website.\"",
+  "root_cause": "bayview-booking 1.5.0: Call to undefined function bayview_booking_sync_calendar() at bayview-booking.php:28, run from the WordPress 'init' hook (do_action('init') in the stack trace) — a fatal error that took the home page and wp-login.php to HTTP 500.",
+  "steps": [
+    {
+      "t": 0.1,
+      "step": "probe",
+      "evidence": "GET / → HTTP 500, \"There has been a critical error on this website\"; wp-admin too: /wp-login.php → HTTP 500"
+    },
+    {
+      "t": 0.4,
+      "step": "read debug.log",
+      "evidence": "PHP Fatal error: Uncaught Error: Call to undefined function bayview_booking_sync_calendar() in /var/www/html/wp-content/plugins/bayview-booking/bayview-booking.php:28"
+    },
+    {
+      "t": 1.2,
+      "step": "identify",
+      "evidence": "plugin bayview-booking, version 1.5.0 (from the stack trace path)"
+    },
+    {
+      "t": 2.4,
+      "step": "deactivate",
+      "evidence": "wp plugin deactivate bayview-booking --skip-plugins → home HTTP 200 (site up, but no booking box)"
+    },
+    {
+      "t": 2.9,
+      "step": "roll back",
+      "evidence": "bayview-booking 1.5.0 → 1.4.2, copied from wp-content/upgrade-backups/bayview-booking-1.4.2"
+    },
+    {
+      "t": 5.2,
+      "step": "re-activate",
+      "evidence": "wp plugin activate bayview-booking → active 1.4.2"
+    }
+  ],
+  "fixed_in_s": 7,
+  "verified": [
+    "home HTTP 200 with every section and the booking form",
+    "wp-login.php HTTP 200",
+    "no new fatal errors in debug.log",
+    "bayview-booking 1.4.2 active"
+  ],
+  "finished_at": "2026-10-09T02:41:15.695Z"
+}

@@ -1,0 +1,84 @@
+{
+  "incident": "hacked",
+  "symptom": "Spam links on the site: / → 2 links to example.com; /first-visit/ → 2 links to example.com, 2 links to example.net; /saturday-hours/ → 2 links to example.com, 2 links to example.net.",
+  "root_cause": "Site compromised: administrator wp_support_admin that is not on the allowlist, a PHP backdoor in uploads (wp-content/uploads/2026/10/wp-cache-helper.php), and spam links to example.com, example.net injected into the database.",
+  "steps": [
+    {
+      "t": 1.3,
+      "step": "scan links",
+      "evidence": "/ → 2 links to example.com; /first-visit/ → 2 links to example.com, 2 links to example.net; /saturday-hours/ → 2 links to example.com, 2 links to example.net"
+    },
+    {
+      "t": 1.7,
+      "step": "audit admins",
+      "evidence": "2 administrators, allowlist has 1; not on it: wp_support_admin <wp.support@example.net> created 2026-10-09 02:42:00 UTC"
+    },
+    {
+      "t": 8.3,
+      "step": "verify checksums",
+      "evidence": "core: Success: WordPress installation verifies against checksums. | wordpress.org plugins: Success: Verified 2 of 3 plugins (1 skipped). | custom: bayview-booking matches its repo copy"
+    },
+    {
+      "t": 9.3,
+      "step": "scan for backdoors",
+      "evidence": "PHP files in uploads: wp-content/uploads/2026/10/wp-cache-helper.php; malware signatures (eval(base64_decode …): wp-content/uploads/2026/10/wp-cache-helper.php"
+    },
+    {
+      "t": 9.6,
+      "step": "quarantine",
+      "evidence": "wp-content/uploads/2026/10/wp-cache-helper.php (sha256 20dbd8e00f3b99cb…) → ./quarantine/20261009T024216Z/wp-content/uploads/2026/10/wp-cache-helper.php, outside the web root"
+    },
+    {
+      "t": 10.6,
+      "step": "remove rogue admin",
+      "evidence": "wp user delete wp_support_admin --reassign=1 (0 posts moved to admin)"
+    },
+    {
+      "t": 11.1,
+      "step": "locate spam",
+      "evidence": "wp db search → 3 distinct injected snippets in wp_options.option_value#154, wp_posts.post_content#24, wp_posts.post_content#25, wp_posts.post_content#28, wp_posts.post_content#29"
+    },
+    {
+      "t": 11.5,
+      "step": "remove spam",
+      "evidence": "wp search-replace ' · <a href=\"https://example.com/payday-loans\">Payday loans</a>…' '' → 1 row changed"
+    },
+    {
+      "t": 12,
+      "step": "remove spam",
+      "evidence": "wp search-replace ' · <a href=\"https://example.com/replica-watches\">Replica watches</a>…' '' → 1 row changed"
+    },
+    {
+      "t": 12.5,
+      "step": "remove spam",
+      "evidence": "wp search-replace '<div style=\"position:absolute;left:-9999px\"><a href=\"https://example.net/casino-bonus\">cas…' '' → 4 rows changed"
+    },
+    {
+      "t": 14.4,
+      "step": "reset passwords",
+      "evidence": "new passwords for: admin (not shown); all sessions destroyed"
+    },
+    {
+      "t": 14.6,
+      "step": "shuffle salts",
+      "evidence": "wp config shuffle-salts → every login cookie is now invalid"
+    },
+    {
+      "t": 14.9,
+      "step": "harden uploads",
+      "evidence": "wp-content/uploads/.htaccess denies PHP; a test .php there now answers HTTP 403"
+    }
+  ],
+  "fixed_in_s": 23.6,
+  "verified": [
+    "home HTTP 200 with every section and the booking form",
+    "wp-login.php HTTP 200",
+    "no links to example.com, example.net on any public page",
+    "administrators = allowlist (admin)",
+    "no PHP files in uploads",
+    "WordPress core matches its checksums",
+    "every wordpress.org plugin matches its checksums",
+    "PHP in uploads is denied (HTTP 403)"
+  ],
+  "finished_at": "2026-10-09T02:42:30.657Z"
+}

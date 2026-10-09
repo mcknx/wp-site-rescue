@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordPress Site Rescue: White Screen, Maintenance Mode, Hacked | Case Study</title>
+<meta name="description" content="Case study: a WordPress clinic site broken three common ways (white screen after a plugin update, stuck in maintenance mode, a staged hack) and brought back each time by a rescue script that finds the cause from evidence, fixes it and checks the booking form works. Fixed in 7.0 s, 17.5 s and 23.6 s. Built by McKeen Asma, WordPress & Tech VA.">
+<meta name="author" content="McKeen Asma">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WordPress site rescue: site down, site back, three times, with the evidence">
+<meta property="og:description" content="White screen of death, stuck in maintenance mode and a hacked site (staged simulation) on a demo WordPress clinic site. Each one diagnosed from the error log, checksums and the database, fixed with WP-CLI and verified. Scripts on GitHub.">
+<meta property="og:image" content="img/poster.jpg">
+<meta property="og:image:width" content="900">
+<meta property="og:image:height" content="506">
+<meta property="og:image:alt" content="The incident log: white screen after a plugin update, fixed in 7.0 s, with the broken page and the healthy page side by side and the root cause from the error log">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WordPress site rescue: white screen, maintenance mode, hacked">
+<meta name="twitter:description" content="A demo WordPress clinic site broken three ways and brought back each time: cause found from evidence, fixed with WP-CLI, booking form checked. Fixed in 7.0 s, 17.5 s and 23.6 s.">
+<meta name="twitter:image" content="img/poster.jpg">
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--ink:#14212b;--muted:#5a6b78;--line:#dde3e8;--accent:#0f7c86;--accent-soft:#e3f3f4;--hot:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1519;--card:#172026;--ink:#e6edf1;--muted:#9aabb6;--line:#2a3640;--accent:#4fc1ca;--accent-soft:#16343a;--hot:#ff8a52}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 56px}
+h1{font-size:clamp(26px,6vw,36px);line-height:1.2;margin:.2em 0 .3em}
+h2{font-size:21px;margin:40px 0 10px}
+h3{font-size:17px;margin:20px 0 4px}
+p{margin:0 0 12px}
+.tag{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:19px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat b{display:block;font-size:28px;color:var(--accent);line-height:1.2}
+.stat span{font-size:14px;color:var(--muted)}
+figure{margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+figure img{display:block;width:100%;height:auto;border-radius:8px}
+figcaption{font-size:14px;color:var(--muted);padding:8px 4px 0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair div{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+ol,ul{padding-left:22px;margin:0 0 12px}
+li{margin:6px 0}
+.note{font-size:14px;color:var(--muted)}
+.method{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;font-size:15px;margin:16px 0}
+.method p{margin:0 0 8px}.method p:last-child{margin:0}
+.incident{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 16px 8px;margin:16px 0}
+.incident dl{margin:0 0 8px}
+.incident dt{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.incident dd{margin:0}
+.fixed{color:var(--accent);font-weight:600}
+.sim{color:var(--hot);font-weight:600}
+code,.ev{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.ev{display:block;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0}
+.tbl{overflow-x:auto;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;font-size:15px;background:var(--card)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.transcript p{margin:0 0 10px}
+.transcript time{display:inline-block;min-width:3.2em;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.next{margin:24px 0 0;font-size:16px}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:15px}
+a{color:var(--accent)}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"WordPress site rescue: white screen, stuck maintenance mode and a hacked site, each diagnosed from evidence and fixed with WP-CLI","description":"Case study on a demo dental clinic WordPress site, broken three common ways on purpose. A white screen of death after a plugin update (fixed in 7.0 s by rolling the plugin back), a site stuck in maintenance mode after an update died half-way (fixed in 17.5 s by reinstalling the damaged plugin), and a staged hack simulation with a rogue administrator, a backdoor file and spam links (cleaned in 23.6 s). Every cause comes from HTTP status, the PHP error log, wordpress.org checksums and the database; every fix is verified, including the booking form.","image":"img/poster.jpg","inLanguage":"en","datePublished":"2026-10-09","author":{"@type":"Person","name":"McKeen Asma","jobTitle":"WordPress & Tech VA","url":"https://mckenneth.vercel.app","address":{"@type":"PostalAddress","addressLocality":"Davao City","addressCountry":"PH"}},"about":["WordPress troubleshooting","white screen of death","WordPress maintenance mode","hacked WordPress site","malware cleanup","WP-CLI","website maintenance"],"keywords":"fix broken WordPress site, white screen of death, critical error on this website, plugin conflict, stuck in maintenance mode, hacked WordPress, malware cleanup, rogue admin, spam links, verify checksums, WP-CLI, WordPress maintenance, virtual assistant, dental clinic","isBasedOn":{"@type":"SoftwareSourceCode","name":"wp-site-rescue","codeRepository":"https://github.com/mcknx/wp-site-rescue","license":"https://opensource.org/licenses/MIT"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoObject","name":"WordPress site rescue demo: three broken sites brought back","description":"85-second demo on a demo dental clinic WordPress site: a critical error after a staged plugin update, a site stuck in maintenance mode, and a staged hack simulation with a rogue administrator and spam links. Each time the real rescue script runs live, finds the cause, fixes it and checks the site, and the healthy site is shown again. Waiting time is cut and captioned; the on-screen timers show real time.","thumbnailUrl":"img/poster.jpg","contentUrl":"demo/p5-demo.mp4","uploadDate":"2026-10-09","duration":"PT1M25S","inLanguage":"en","creator":{"@type":"Person","name":"McKeen Asma"},"transcript":"When a clinic's website goes down, no patient can book. Here's how I bring a broken WordPress site back. Bayview Dental, a demo site, right after a staged plugin update. A critical error on every page. My rescue script reads the debug log, finds the plugin that crashed, rolls it back, and checks the booking form. The site is back, and patients can book again. Next, an update that died half-way. The site is stuck in maintenance mode. Checksums find the half-written plugin files, and the script reinstalls that exact version. Third, a hacked site, staged as a safe simulation. There's an administrator nobody created. And spam links injected into the pages and the footer. The script quarantines the backdoor, deletes the rogue admin, strips the spam from the database, resets passwords, and blocks PHP in uploads. Clean again. Every rescue writes a timed log: the symptom, the root cause, each step, and what was checked. Built by McKeen Asma, WordPress and Tech VA."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"My site shows \"There has been a critical error on this website\". Can you fix it?","acceptedAnswer":{"@type":"Answer","text":"That message is WordPress hiding a PHP fatal error, most often from a plugin or theme update. I read the error log to find the exact plugin and line, switch that one plugin off so the site comes back, then roll it back to the last working version or fix the conflict. In this demo that took 7.0 seconds of script time, and the booking form was checked afterwards."}},{"@type":"Question","name":"Will I lose content or orders while you fix it?","acceptedAnswer":{"@type":"Answer","text":"I take a full backup of files and database before changing anything, and I change only what the evidence points to: one plugin, one file, the exact spam snippets. In this demo the fixed site matched a screenshot of the healthy site to 0.000% of pixels, with every section and the booking form still there."}},{"@type":"Question","name":"Can you clean a hacked WordPress site?","acceptedAnswer":{"@type":"Answer","text":"Yes, step by step: find admins nobody created, compare WordPress and plugin files with the official wordpress.org checksums, find PHP files hidden in uploads, quarantine them, remove spam from the database, reset passwords, log everyone out, rotate the security keys and block PHP in uploads. The hack in this demo is a staged, harmless simulation. On a real site I would also ask your host for access logs to find how they got in."}},{"@type":"Question","name":"What access do you need?","acceptedAnswer":{"@type":"Answer","text":"The least that does the job: a WordPress admin account of my own (not yours), plus SFTP or SSH from your host if the site is fully down. I remove my access when the work is done, if you want."}},{"@type":"Question","name":"Is this a real client site?","acceptedAnswer":{"@type":"Answer","text":"No. Bayview Dental is a demo clinic I built on WordPress, and the three incidents are staged by a script on my own machine. The diagnosis, fixes and checks are real and run against that site. There is no paying client here."}}]}
+</script>
+</head>
+<body>
+<main>
+<article>
+<header>
+<span class="tag">Case study · WordPress site rescue</span>
+<h1>Broken WordPress site? Back online, step by step, with the evidence</h1>
+<p class="lede">If your website is down, patients can't book and you lose them to the clinic down the road. I broke a demo clinic's WordPress site in the three ways small-business sites most often break, then brought it back each time: the cause found, only that fixed, and the booking form checked before calling it done.</p>
+<p class="code-link"><a href="https://github.com/mcknx/wp-site-rescue">View the code on GitHub →</a></p>
+</header>
+
+<figure id="demo-video"><video controls preload="metadata" playsinline src="demo/p5-demo.mp4" poster="img/poster.jpg" style="display:block;width:100%;height:auto;border-radius:8px" aria-describedby="transcript-intro"></video><figcaption>The 85-second demo, narrated in my own voice (AI voice clone). Each broken site is shown, the real rescue script runs, then the site is shown working. The video cuts waiting time and says so on screen; the timers show real time. Prefer reading? The <a href="#transcript">full transcript</a> is below.</figcaption></figure>
+
+<div class="stats">
+<div class="stat"><b>3 of 3 back</b><span>all three broken sites working again, booking form included</span></div>
+<div class="stat"><b>Under 30 s</b><span>for each repair once it starts (7, 18 and 24 seconds)</span></div>
+<div class="stat"><b>Nothing lost</b><span>every page, photo and setting the same as before it broke</span></div>
+</div>
+
+<section id="plain-words">
+<h2>The three problems, in plain words</h2>
+<div class="tbl"><table>
+<thead><tr><th>What the owner sees</th><th>What was really wrong</th><th>What I did</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>A blank page saying "critical error"</td><td>A plugin update was faulty</td><td>Put back the previous version</td><td>Site and bookings back in 7 s</td></tr>
+<tr><td>"Briefly unavailable for maintenance" that never goes away</td><td>An update stopped half-way and left broken files</td><td>Cleared the stuck update, replaced the broken files</td><td>Site and bookings back in 18 s</td></tr>
+<tr><td>Strange "payday loan" links on the site <span class="sim">(staged, harmless test)</span></td><td>A fake admin, a hidden backdoor file and spam in the database</td><td>Removed all three, changed every password, locked the doors</td><td>Clean site, only the real admin can log in</td></tr>
+</tbody></table></div>
+<p>For you as the owner: the site comes back first, then the real cause is fixed, and you get a one-page report of what broke, the proof, and what I changed. Nothing else on your site is touched.</p>
+</section>
+
+<section id="your-site">
+<h2>What I'd do on your real site</h2>
+<ol>
+<li><b>Backup first:</b> a full copy of your site, even the broken one, saved before I change anything.</li>
+<li><b>Only the access I need:</b> my own login, never your password. Removed when we're done if you want.</li>
+<li><b>Get you back online:</b> the quickest safe step first, so patients can book again.</li>
+<li><b>Fix the cause on a test copy:</b> the real fix is tried on a private copy of your site, then put live.</li>
+<li><b>Check:</b> home page, booking or contact form, login, and after a hack, the admin list and files.</li>
+<li><b>Report:</b> what broke, the proof, what I changed, and how to stop it happening again.</li>
+</ol>
+<p><b>Ongoing care, if you want it:</b> a monthly routine of backups, updates tested on a copy first, and a security check, so problems are found before patients find them.</p>
+<p class="note">I haven't done this on a paying client's site yet; this demo is how I'd work on yours.</p>
+</section>
+
+<section id="faq">
+<h2>FAQ</h2>
+<h3>My site shows "There has been a critical error on this website". Can you fix it?</h3>
+<p>That message is WordPress hiding a PHP fatal error, most often from a plugin or theme update. I read the error log to find the exact plugin and line, switch that one plugin off so the site comes back, then roll it back to the last working version or fix the conflict. In this demo that took 7.0 seconds of script time, and the booking form was checked afterwards.</p>
+<h3>Will I lose content or orders while you fix it?</h3>
+<p>I take a full backup of files and database before changing anything, and I change only what the evidence points to: one plugin, one file, the exact spam snippets. In this demo the fixed site matched a screenshot of the healthy site to 0.000% of pixels, with every section and the booking form still there.</p>
+<h3>Can you clean a hacked WordPress site?</h3>
+<p>Yes, step by step: find admins nobody created, compare WordPress and plugin files with the official wordpress.org checksums, find PHP files hidden in uploads, quarantine them, remove spam from the database, reset passwords, log everyone out, rotate the security keys and block PHP in uploads. The hack in this demo is a staged, harmless simulation. On a real site I would also ask your host for access logs to find how they got in.</p>
+<h3>What access do you need?</h3>
+<p>The least that does the job: a WordPress admin account of my own (not yours), plus SFTP or SSH from your host if the site is fully down. I remove my access when the work is done, if you want.</p>
+<h3>Is this a real client site?</h3>
+<p>No. Bayview Dental is a demo clinic I built on WordPress, and the three incidents are staged by a script on my own machine. The diagnosis, fixes and checks are real and run against that site. There is no paying client here.</p>
+</section>
+
+<section id="incidents">
+<h2>The evidence, incident by incident</h2>
+<p>For anyone who wants the technical detail. Times are from the committed run logs. The script never uses the names the break script used: the plugin, files, user and spam are all found from the site's own evidence at run time.</p>
+<div class="tbl"><table>
+<thead><tr><th>Incident</th><th>Symptom</th><th class="n">Fixed in</th></tr></thead>
+<tbody>
+<tr><td><a href="#white-screen">White screen after a plugin update</a></td><td>HTTP 500, "critical error"</td><td class="n fixed">7.0 s</td></tr>
+<tr><td><a href="#maintenance">Stuck in maintenance mode</a></td><td>HTTP 503 on every page</td><td class="n fixed">17.5 s</td></tr>
+<tr><td><a href="#hacked">Hacked site <span class="sim">(staged simulation)</span></a></td><td>spam links, unknown admin</td><td class="n fixed">23.6 s</td></tr>
+</tbody></table></div>
+
+<div class="incident" id="white-screen">
+<h3>1. White screen after a plugin update <span class="fixed">· fixed in 7.0 s</span></h3>
+<dl>
+<dt>Symptom</dt><dd>Home page and the admin login both return HTTP 500: "There has been a critical error on this website."</dd>
+<dt>Root cause found</dt><dd>The error log names the plugin and the line:
+<span class="ev">PHP Fatal error: Uncaught Error: Call to undefined function bayview_booking_sync_calendar() in /var/www/html/wp-content/plugins/bayview-booking/bayview-booking.php:28</span>
+The clinic's booking plugin had just been updated from 1.4.2 to 1.5.0, and 1.5.0 calls a function that doesn't exist on every page load.</dd>
+<dt>Fix</dt><dd>Switched that one plugin off (site back up, but no booking box), copied 1.4.2 back from WordPress's own update backup, and switched it on again.</dd>
+<dt>Verified</dt><dd>Home HTTP 200 with every section and the booking form; login page HTTP 200; no new errors in the log; booking plugin 1.4.2 active.</dd>
+</dl>
+<div class="pair">
+<figure><div>Before</div><img src="img/white-screen-broken.jpg" width="1280" height="720" loading="lazy" alt="WordPress page showing only: There has been a critical error on this website"></figure>
+<figure><div>After</div><img src="img/white-screen-healthy.jpg" width="1280" height="720" loading="lazy" alt="Bayview Dental home page working again with the booking box"></figure>
+</div>
+</div>
+
+<div class="incident" id="maintenance">
+<h3>2. Stuck in maintenance mode <span class="fixed">· fixed in 17.5 s</span></h3>
+<dl>
+<dt>Symptom</dt><dd>Every page returns HTTP 503: "Briefly unavailable for scheduled maintenance. Check back in a minute." It never comes back by itself.</dd>
+<dt>Root cause found</dt><dd>An update that never finished. WordPress's <code>.maintenance</code> file was left behind. With it removed, the site showed HTTP 500 and the log said:
+<span class="ev">PHP Parse error: syntax error, unexpected string content "Failed to attach a file. The t..." in /var/www/html/wp-content/plugins/contact-form-7/includes/mail.php on line 316</span>
+Comparing every plugin with the official wordpress.org checksums named exactly which files were damaged:
+<span class="ev">contact-form-7 6.2.1: includes/mail.php (checksum does not match), includes/submission.php (checksum does not match); every other wordpress.org plugin matches</span></dd>
+<dt>Fix</dt><dd>Removed the leftover <code>.maintenance</code> file and reinstalled Contact Form 7 at the exact version the site was running (6.2.1), so nothing else changed.</dd>
+<dt>Verified</dt><dd>Home HTTP 200 with every section and the booking form; login page HTTP 200; no <code>.maintenance</code> file; every plugin matches its checksums.</dd>
+</dl>
+<div class="pair">
+<figure><div>Before</div><img src="img/maintenance-stuck-broken.jpg" width="1280" height="720" loading="lazy" alt="WordPress page showing only: Briefly unavailable for scheduled maintenance. Check back in a minute."></figure>
+<figure><div>After</div><img src="img/maintenance-stuck-healthy.jpg" width="1280" height="720" loading="lazy" alt="Bayview Dental home page working again"></figure>
+</div>
+</div>
+
+<div class="incident" id="hacked">
+<h3>3. Hacked site, <span class="sim">a staged simulation on a demo site</span> <span class="fixed">· cleaned in 23.6 s</span></h3>
+<p class="note">Nothing real was attacked. A script planted what a compromise usually looks like: an admin nobody created, spam links, and a "backdoor" file in uploads that is inert (it reads no input and only prints a fixed message). The spam links point to example.com and example.net.</p>
+<dl>
+<dt>Symptom</dt><dd>Spam links on the site: in the footer of every page ("Payday loans", "Replica watches") and hidden off-screen in two news posts.</dd>
+<dt>Root cause found</dt><dd>
+<span class="ev">2 administrators, allowlist has 1; not on it: wp_support_admin &lt;wp.support@example.net&gt;</span>
+<span class="ev">PHP files in uploads: wp-content/uploads/2026/10/wp-cache-helper.php; malware signatures (eval(base64_decode …)</span>
+<span class="ev">wp db search → 3 distinct injected snippets in wp_options.option_value#154, wp_posts.post_content#24, #25, #28, #29</span>
+WordPress core and the wordpress.org plugins matched their official checksums, and the custom plugin matched its own copy, so the only planted file was the one in uploads.</dd>
+<dt>Fix (security steps)</dt><dd><ol>
+<li><b>Backdoor quarantined:</b> moved outside the web root, with its SHA-256 fingerprint logged.</li>
+<li><b>Rogue admin removed:</b> <code>wp_support_admin</code> deleted, its content reassigned to the real admin (it had none).</li>
+<li><b>Files checked:</b> WordPress core and plugins against wordpress.org checksums, all matching.</li>
+<li><b>Spam removed:</b> the exact injected snippets taken out of the database (6 rows: the footer setting, two posts and their revisions).</li>
+<li><b>Locked out:</b> every admin password reset, every login session destroyed, and the security keys (salts) rotated so old login cookies stop working.</li>
+<li><b>PHP blocked in uploads:</b> a rule so files there can't run. A test file now answers HTTP 403.</li>
+</ol></dd>
+<dt>Verified</dt><dd>Home and login HTTP 200; no spam links on any public page; admins match the allowlist; no PHP files in uploads; core and plugin checksums pass; PHP in uploads denied (HTTP 403). The test also checks that the security keys and the admin password really changed and that no sessions are left.</dd>
+</dl>
+<div class="pair">
+<figure><div>Before</div><img src="img/hacked-broken.jpg" width="1280" height="720" loading="lazy" alt="Bayview Dental footer with injected spam links Payday loans and Replica watches next to the copyright"></figure>
+<figure><div>After</div><img src="img/hacked-healthy.jpg" width="1280" height="720" loading="lazy" alt="The same footer after the cleanup, with only the clinic's own copyright line"></figure>
+</div>
+<figure><img src="img/rescue-hacked.jpg" width="900" height="506" loading="lazy" alt="Terminal: the rescue script removing three spam snippets, resetting passwords, shuffling salts, blocking PHP in uploads, then eight green checks"><figcaption>A frame from the video: the end of the live hacked-site rescue. This filmed run took 37.7 s; the committed log above says 23.6 s. Both are real runs; times vary with how busy my machine was.</figcaption></figure>
+</div>
+</section>
+
+<section id="method">
+<div class="method">
+<p><b>How this was done.</b> WordPress (Astra, Elementor, Contact Form 7 and the clinic's own booking plugin) ran in Docker on my own machine. A break script staged each incident from a clean snapshot; the rescue script then worked only from evidence: HTTP status, the PHP error log, WP-CLI, wordpress.org checksums and the database. An automatic check ran all three break-and-rescue cycles and failed if anything was missing afterwards, including a full-page screenshot compared with the healthy site (0.000% pixel difference every time).</p>
+<p><b>About the times:</b> "fixed in" is script time from the committed run logs. Times vary per run with how busy my machine is, and the terminal in the video shows the filmed run's own times (7.1 s, 18.0 s and 37.7 s). A real job also includes the backup, staging and your approval, which take longer than the script.</p>
+<p><b>Honest note:</b> Bayview Dental is a demo clinic, the same fictional clinic as my other case studies. The incidents are staged on a demo site; the hack is a harmless simulation. There is no paying client here.</p>
+</div>
+<figure><img src="img/poster.jpg" width="900" height="506" loading="lazy" alt="The incident log page: white screen after a plugin update, fixed in 7.0 s, broken and healthy screenshots, and the root cause"><figcaption>The incident log the scripts write after each rescue, the kind of report I send a client.</figcaption></figure>
+</section>
+
+<section id="tools">
+<h2>Tools used</h2>
+<ul>
+<li><b>WordPress</b> with Astra, Elementor and Contact Form 7, in Docker; <b>WP-CLI</b> for every diagnosis and fix.</li>
+<li><b>wordpress.org checksums</b> (<code>wp core verify-checksums</code>, <code>wp plugin verify-checksums</code>) to prove which files were changed.</li>
+<li><b>Bash</b> rescue playbooks; <b>Playwright</b> and <b>ImageMagick</b> to screenshot and compare the site before and after.</li>
+</ul>
+<p><a href="https://github.com/mcknx/wp-site-rescue">View the code on GitHub →</a> (break, rescue, restore and check scripts, incident logs, MIT licence)</p>
+</section>
+
+<section id="transcript" class="transcript">
+<h2>Video transcript</h2>
+<p id="transcript-intro" class="note">Full narration of the 85-second demo video, with start times.</p>
+<p><time>0:00</time> When a clinic&#x27;s website goes down, no patient can book. Here&#x27;s how I bring a broken WordPress site back.</p>
+<p><time>0:08</time> Bayview Dental, a demo site, right after a staged plugin update. A critical error on every page.</p>
+<p><time>0:16</time> My rescue script reads the debug log, finds the plugin that crashed, rolls it back, and checks the booking form.</p>
+<p><time>0:25</time> The site is back, and patients can book again.</p>
+<p><time>0:29</time> Next, an update that died half-way. The site is stuck in maintenance mode.</p>
+<p><time>0:35</time> Checksums find the half-written plugin files, and the script reinstalls that exact version.</p>
+<p><time>0:43</time> Third, a hacked site, staged as a safe simulation. There&#x27;s an administrator nobody created.</p>
+<p><time>0:50</time> And spam links injected into the pages and the footer.</p>
+<p><time>0:55</time> The script quarantines the backdoor, deletes the rogue admin, strips the spam from the database, resets passwords, and blocks PHP in uploads.</p>
+<p><time>1:10</time> Clean again.</p>
+<p><time>1:12</time> Every rescue writes a timed log: the symptom, the root cause, each step, and what was checked.</p>
+<p><time>1:20</time> Built by McKeen Asma, WordPress and Tech VA.</p>
+</section>
+
+<p class="next">Same clinic: <a href="https://mckenneth.vercel.app/case-studies/ai-lead-responder/">AI lead responder</a> (the lead form) · <a href="https://mckenneth.vercel.app/case-studies/clinic-chat-assistant/">clinic chat assistant</a> (website chat and booking) · <a href="https://mckenneth.vercel.app/case-studies/inbox-triage/">AI inbox triage</a> (email and invoices) · <a href="https://mckenneth.vercel.app/case-studies/wp-speed-fix/">WordPress speed fix</a> (the same site, made fast)</p>
+
+<footer>
+<b>McKeen Asma</b> · WordPress &amp; Tech VA · Davao, Philippines<br>
+Portfolio: <a href="https://mckenneth.vercel.app">mckenneth.vercel.app</a>
+</footer>
+</article>
+</main>
+</body>
+</html>

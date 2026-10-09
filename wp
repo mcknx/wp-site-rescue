@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# WP-CLI against the va-p5 stack:  ./wp plugin list
+cd "$(dirname "$0")"
+exec docker compose -p va-p5 exec -T cli wp "$@"

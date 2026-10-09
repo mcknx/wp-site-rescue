@@ -1,0 +1,73 @@
+// node render-incidents.mjs → incidents.html: one self-contained page (screenshots inlined) from logs/*.json + img/*.jpg
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const dir = (p) => new URL(p, import.meta.url).pathname;
+const ORDER = [
+  ['white-screen', 'White screen after a plugin update'],
+  ['maintenance-stuck', 'Stuck in maintenance mode'],
+  ['hacked', 'Hacked: rogue admin, spam links, backdoor'],
+];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const img = (name) => `data:image/jpeg;base64,${readFileSync(dir(`img/${name}.jpg`)).toString('base64')}`;
+
+const cards = ORDER.map(([id, title]) => {
+  const l = JSON.parse(readFileSync(dir(`logs/${id}.json`), 'utf8'));
+  const steps = l.steps.map((s) => `<li><span class="t">${s.t.toFixed(1)} s</span><span class="s">${esc(s.step)}</span><span class="e">${esc(s.evidence)}</span></li>`).join('');
+  const ver = l.verified.map((v) => `<li>${esc(v)}</li>`).join('');
+  return `<article class="card" id="${id}">
+  <header><h2>${esc(title)}</h2><p class="fixed">fixed in <b>${l.fixed_in_s.toFixed(1)} s</b></p></header>
+  <div class="shots">
+    <figure><img src="${img(`${id}-broken`)}" alt="${esc(title)}: the broken site" width="1280" height="720"><figcaption class="bad">Before: ${esc(l.symptom)}</figcaption></figure>
+    <figure><img src="${img(`${id}-healthy`)}" alt="${esc(title)}: the site after the rescue" width="1280" height="720"><figcaption class="good">After: the healthy site, matching the baseline screenshot (pixel diff in check.sh)</figcaption></figure>
+  </div>
+  <h3>Root cause</h3><p class="cause">${esc(l.root_cause)}</p>
+  <h3>Timeline</h3><ol class="steps">${steps}</ol>
+  <h3>Verified</h3><ul class="ok">${ver}</ul>
+</article>`;
+}).join('\n');
+
+const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Site Rescue Log</title>
+<style>
+:root{--bg:#f4f7f9;--card:#fff;--ink:#16222d;--soft:#5b6b7a;--line:#dde5ea;--teal:#13806f;--red:#b4232c;--navy:#0b3954;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151b;--card:#16212a;--ink:#e6edf2;--soft:#9aabb8;--line:#263440;--teal:#3fc2ac;--red:#f07178;--navy:#9fd3ff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e151b;--card:#16212a;--ink:#e6edf2;--soft:#9aabb8;--line:#263440;--teal:#3fc2ac;--red:#f07178;--navy:#9fd3ff;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:32px 16px 48px}
+h1{margin:0 0 6px;font-size:clamp(26px,4vw,36px);color:var(--navy)}
+.lede{margin:0 0 28px;color:var(--soft);max-width:760px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 26px}
+.card header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+h2{margin:0;font-size:22px}
+.fixed{margin:0;color:var(--teal);font-size:18px}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 4px}
+figure{margin:0}
+figure img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--line)}
+figcaption{font-size:13px;margin-top:6px;color:var(--soft)}
+figcaption.bad{color:var(--red)} figcaption.good{color:var(--teal)}
+h3{margin:18px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft)}
+.cause{margin:0}
+.steps{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.steps li{display:grid;grid-template-columns:64px 150px 1fr;gap:10px;padding:6px 0 6px 12px;font-size:14px;border-bottom:1px solid var(--line)}
+.steps .t{font-variant-numeric:tabular-nums;color:var(--teal);font-weight:600}
+.steps .s{font-weight:600}
+.steps .e{overflow-wrap:anywhere;color:var(--soft);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.ok{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:14px}
+.ok li::before{content:"✓ ";color:var(--teal);font-weight:700}
+footer{color:var(--soft);font-size:13px}
+@media (max-width:720px){.shots,.ok{grid-template-columns:1fr}.steps li{grid-template-columns:52px 1fr}.steps .e{grid-column:1/-1}}
+</style></head>
+<body><main>
+<h1>Bayview Dental: three site rescues</h1>
+<p class="lede">A demo WordPress site for a fictional clinic, broken three common ways by <code>break.sh</code> and fixed by <code>rescue.sh</code>.
+Each playbook finds the cause from evidence (HTTP status, debug.log, WP-CLI, checksums, the database), fixes it, then checks the result.
+Every time and every line of evidence below comes from the committed run logs.</p>
+${cards}
+<footer>Incidents are staged on a local demo site. The "backdoor" is an inert simulation and the spam links point to example.com / example.net.
+Generated by render-incidents.mjs from logs/*.json.</footer>
+</main></body></html>
+`;
+writeFileSync(dir('incidents.html'), html);
+console.log(`incidents.html: ${(html.length / 1024).toFixed(0)} KB`);
