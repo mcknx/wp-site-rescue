@@ -2,7 +2,33 @@
 
 A healthy WordPress site for **Bayview Dental**, a fictional clinic in Davao City, broken three realistic ways and fixed by scripted, timed playbooks. Each playbook finds the cause from evidence (HTTP status, `debug.log`, WP-CLI, wordpress.org checksums, the database), fixes only that, and verifies the site, booking form included. Everything runs locally in Docker and is driven only by WP-CLI and the shell.
 
-Live case study (with the 85-second demo video): https://mckenneth.vercel.app/case-studies/wp-site-rescue/
+**What this proves:** three scripted playbooks find what broke a WordPress site from evidence alone (HTTP status, `debug.log`, WP-CLI, wordpress.org checksums, the database), fix only that, and prove the site and its booking form are back. `rescue.sh` never reads what `break.sh` did.
+
+[![Demo: a white screen, a site stuck in maintenance mode and a simulated hack, each diagnosed and fixed by rescue.sh, then the timed incident log](demo/demo.gif)](demo/p5-demo.mp4)
+
+14-second preview at 5x speed. Click it for the full 85-second narrated demo (`demo/p5-demo.mp4`).
+
+**Live case study:** https://mckenneth.vercel.app/case-studies/wp-site-rescue/
+
+**`./check.sh`, run again on 16 Oct 2026** (each incident: restore → break → confirm broken → rescue → confirm healthy; real output, shortened):
+
+```text
+[check] ok   (white-screen): broken: home 500, critical error page
+[check] ok   (white-screen): home 200, all sections + booking form present
+[shots] ok   white-screen-healthy vs baseline: 0.000% of 1280×5006 px differ (≤ 0.5%)
+[check] ok   (maintenance-stuck): broken: home 503, maintenance message
+[check] ok   (maintenance-stuck): no .maintenance, plugin checksums pass
+[shots] ok   maintenance-stuck-healthy vs baseline: 0.000% of 1280×5006 px differ (≤ 0.5%)
+[check] ok   (hacked): broken: spam links on home, extra admin, PHP in uploads
+[check] ok   (hacked): admins = allowlist, no spam on any page, no PHP in uploads, checksums pass, uploads PHP denied
+[check] ok   (hacked): salts shuffled (AUTH_KEY changed), admin password hash changed, admin sessions destroyed
+[shots] ok   hacked-healthy vs baseline: 0.000% of 1280×5006 px differ (≤ 0.5%)
+[check] PASS — 3 incidents broken and rescued in 1061s; site left healthy
+```
+
+This run took longer than the times in the table below (62 s, 82 s and 227 s to fix) because a Lighthouse check was running on the same machine at the same time. The check tests the result, not the speed.
+
+**Caveat:** Bayview Dental is a fictional clinic and this is a demo site, not client work. `break.sh` stages the incidents. The "hacked" one is an inert simulation, and nothing real was attacked.
 
 ## Results
 
